@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Live Weather Dashboard - Real-time atmospheric conditions and 5-day forecasts powered by Open-Meteo APIs.">
-  <title>Live Weather Dashboard | Real-Time Forecast</title>
+  <meta name="description" content="Live Weather Dashboard - Real-time atmospheric conditions and 5-day forecasts for Maharashtra districts and worldwide cities powered by Open-Meteo APIs.">
+  <title>Live Weather Dashboard | Maharashtra Districts &amp; Global Forecast</title>
 
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -80,6 +80,17 @@
         <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" stroke-dasharray="40 16" fill="none" />
       </g>
 
+      <!-- Chevron Down Icon -->
+      <g id="icon-chevron-down">
+        <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      </g>
+
+      <!-- Maharashtra State Emblem / Map Pin Icon -->
+      <g id="icon-district">
+        <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" stroke-width="2" fill="none" />
+        <path d="M9 3V21M3 9H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+      </g>
+
       <!-- WEATHER ICONS -->
       <!-- Clear Sky / Sunny -->
       <g id="icon-clear">
@@ -143,45 +154,121 @@
     <header class="app-header">
       <div class="brand-row">
         <div class="brand-info">
-          <div class="brand-badge">
-            <span class="live-dot" aria-hidden="true"></span>
-            <span>OPEN-METEO LIVE</span>
+          <div class="brand-badge-group">
+            <div class="brand-badge">
+              <span class="live-dot" aria-hidden="true"></span>
+              <span>OPEN-METEO LIVE</span>
+            </div>
+            <div class="brand-badge badge-mh">
+              <span>MAHARASHTRA DISTRICTS</span>
+            </div>
           </div>
           <h1 class="brand-title">Live Weather Dashboard</h1>
-          <p class="brand-subtitle">Real-time meteorological insights and 5-day atmospheric forecasting</p>
+          <p class="brand-subtitle">Real-time atmospheric insights and 5-day forecasts for Maharashtra districts and worldwide cities</p>
         </div>
       </div>
 
-      <!-- Search Section Form -->
-      <form id="search-form" class="search-form" role="search" novalidate>
-        <div class="search-input-wrapper">
-          <svg class="search-icon" aria-hidden="true">
-            <use href="#icon-search" xlink:href="#icon-search"></use>
-          </svg>
-          <input
-            type="text"
-            id="city-input"
-            class="city-input"
-            placeholder="Search city (e.g. Pune, London, Tokyo, New York)..."
-            autocomplete="off"
-            spellcheck="false"
-            aria-label="City search input"
-          >
-        </div>
-        <button type="submit" id="search-btn" class="search-submit-btn">
-          <span>Search</span>
-        </button>
-      </form>
+      <!-- Controls Section: Search Form & Maharashtra District Dropdown -->
+      <div class="controls-wrapper">
+        <!-- Search Section Form -->
+        <form id="search-form" class="search-form" role="search" novalidate>
+          <div class="search-input-wrapper">
+            <svg class="search-icon" aria-hidden="true">
+              <use href="#icon-search" xlink:href="#icon-search"></use>
+            </svg>
+            <input
+              type="text"
+              id="city-input"
+              class="city-input"
+              placeholder="Search any city or district (e.g. Pune, Nagpur, London)..."
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="City search input"
+            >
+          </div>
+          <button type="submit" id="search-btn" class="search-submit-btn">
+            <span>Search</span>
+          </button>
+        </form>
 
-      <!-- Quick Search City Pills -->
-      <div class="quick-cities" aria-label="Suggested cities">
-        <span class="quick-label">Trending:</span>
+        <!-- Maharashtra 36 Districts Quick Selector Dropdown -->
+        <div class="district-select-container">
+          <div class="district-select-wrapper">
+            <svg class="district-icon" aria-hidden="true">
+              <use href="#icon-location" xlink:href="#icon-location"></use>
+            </svg>
+            <select id="district-select" class="district-select" aria-label="Select Maharashtra District">
+              <option value="">-- Choose Maharashtra District (36 Districts) --</option>
+              <optgroup label="Pune Division">
+                <option value="Pune">Pune</option>
+                <option value="Satara">Satara</option>
+                <option value="Sangli">Sangli</option>
+                <option value="Solapur">Solapur</option>
+                <option value="Kolhapur">Kolhapur</option>
+              </optgroup>
+              <optgroup label="Konkan Division">
+                <option value="Mumbai">Mumbai City</option>
+                <option value="Mumbai Suburban">Mumbai Suburban</option>
+                <option value="Thane">Thane</option>
+                <option value="Palghar">Palghar</option>
+                <option value="Raigad">Raigad (Alibag)</option>
+                <option value="Ratnagiri">Ratnagiri</option>
+                <option value="Sindhudurg">Sindhudurg</option>
+              </optgroup>
+              <optgroup label="Nashik Division (Khandesh)">
+                <option value="Nashik">Nashik</option>
+                <option value="Ahmednagar">Ahilyanagar (Ahmednagar)</option>
+                <option value="Dhule">Dhule</option>
+                <option value="Jalgaon">Jalgaon</option>
+                <option value="Nandurbar">Nandurbar</option>
+              </optgroup>
+              <optgroup label="Chhatrapati Sambhajinagar Division (Marathwada)">
+                <option value="Chhatrapati Sambhajinagar">Chhatrapati Sambhajinagar (Aurangabad)</option>
+                <option value="Jalna">Jalna</option>
+                <option value="Beed">Beed</option>
+                <option value="Latur">Latur</option>
+                <option value="Dharashiv">Dharashiv (Osmanabad)</option>
+                <option value="Nanded">Nanded</option>
+                <option value="Parbhani">Parbhani</option>
+                <option value="Hingoli">Hingoli</option>
+              </optgroup>
+              <optgroup label="Amravati Division (Vidarbha West)">
+                <option value="Amravati">Amravati</option>
+                <option value="Akola">Akola</option>
+                <option value="Yavatmal">Yavatmal</option>
+                <option value="Buldhana">Buldhana</option>
+                <option value="Washim">Washim</option>
+              </optgroup>
+              <optgroup label="Nagpur Division (Vidarbha East)">
+                <option value="Nagpur">Nagpur</option>
+                <option value="Wardha">Wardha</option>
+                <option value="Bhandara">Bhandara</option>
+                <option value="Gondia">Gondia</option>
+                <option value="Chandrapur">Chandrapur</option>
+                <option value="Gadchiroli">Gadchiroli</option>
+              </optgroup>
+            </select>
+            <svg class="chevron-icon" aria-hidden="true">
+              <use href="#icon-chevron-down" xlink:href="#icon-chevron-down"></use>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Search City Pills (Featuring Maharashtra Hubs & Global Metros) -->
+      <div class="quick-cities" aria-label="Quick selection districts and cities">
+        <span class="quick-label">Maharashtra Hubs:</span>
         <div class="quick-pills-list">
-          <button type="button" class="city-pill" data-city="Pune">Pune</button>
+          <button type="button" class="city-pill active-pill" data-city="Pune">Pune</button>
           <button type="button" class="city-pill" data-city="Mumbai">Mumbai</button>
-          <button type="button" class="city-pill" data-city="London">London</button>
-          <button type="button" class="city-pill" data-city="Tokyo">Tokyo</button>
-          <button type="button" class="city-pill" data-city="New York">New York</button>
+          <button type="button" class="city-pill" data-city="Nagpur">Nagpur</button>
+          <button type="button" class="city-pill" data-city="Nashik">Nashik</button>
+          <button type="button" class="city-pill" data-city="Chhatrapati Sambhajinagar">Chh. Sambhajinagar</button>
+          <button type="button" class="city-pill" data-city="Kolhapur">Kolhapur</button>
+          <button type="button" class="city-pill" data-city="Thane">Thane</button>
+          <button type="button" class="city-pill" data-city="Solapur">Solapur</button>
+          <button type="button" class="city-pill" data-city="Satara">Satara</button>
+          <button type="button" class="city-pill" data-city="Amravati">Amravati</button>
         </div>
       </div>
     </header>
@@ -205,7 +292,7 @@
         <section class="forecast-section" aria-label="5-Day Weather Forecast">
           <div class="forecast-header">
             <h2 class="forecast-title">5-Day Atmospheric Forecast</h2>
-            <span class="forecast-badge">Extended Outlook</span>
+            <span class="forecast-badge" id="forecast-badge">Extended Outlook</span>
           </div>
           <!-- 5-Column Forecast Grid (Populated safely via DOM APIs) -->
           <div class="forecast-grid" id="forecast-grid">
@@ -217,7 +304,7 @@
 
     <!-- Footer Documentation & Attribution -->
     <footer class="app-footer">
-      <p class="footer-note">InternCircle Project 04 &bull; Built with HTML5, CSS3 &amp; Vanilla JavaScript</p>
+      <p class="footer-note">InternCircle Project 04 &bull; Maharashtra Weather District Hub &bull; Built with HTML5, CSS3 &amp; Vanilla JavaScript</p>
       <p class="footer-attribution">Data provided by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo API</a> &bull; Keyless &amp; Open-Source</p>
     </footer>
   </div>

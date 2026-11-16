@@ -1,15 +1,17 @@
 /**
  * Live Weather Dashboard - JavaScript Application Core
+ * Maharashtra District Weather Hub & Worldwide Forecast
  * InternCircle Project 04 Specification
  * 
  * Strict architectural guidelines implemented:
  * 1. Centralized API configuration at the top
- * 2. Async/await modular data-fetching layer (Geocoding & Forecast APIs)
- * 3. WMO Weather Code to emoji-free text label & SVG mapping
- * 4. Safe DOM rendering using document.createElement & .textContent (Zero innerHTML for dynamic/user data)
- * 5. Complete state management: Empty, Loading, Error, and Success states
- * 6. localStorage persistence with default fallback to 'Pune'
- * 7. Form submission-only fetching (No keystroke spam)
+ * 2. Complete 36 Maharashtra Districts registry with calibrated coordinates
+ * 3. Async/await modular data-fetching layer (Open-Meteo Geocoding & Forecast APIs)
+ * 4. WMO Weather Code to emoji-free text label & SVG mapping
+ * 5. Safe DOM rendering using document.createElement & .textContent (Zero innerHTML for dynamic/user data)
+ * 6. Complete state management: Empty, Loading, Error, and Success states
+ * 7. localStorage persistence with default fallback to 'Pune'
+ * 8. Form submission-only fetching + District dropdown selection (No keystroke spam)
  */
 
 'use strict';
@@ -25,7 +27,63 @@ const CONFIG = {
 };
 
 /* ==========================================================================
-   2. WMO Weather Code Lookup Dictionary (Emoji-Free & SVG Mapped)
+   2. Comprehensive Maharashtra 36 Districts Registry
+   ========================================================================== */
+const MAHARASHTRA_DISTRICTS = {
+  // Pune Division
+  'pune': { name: 'Pune', division: 'Pune Division', lat: 18.5204, lon: 73.8567 },
+  'satara': { name: 'Satara', division: 'Pune Division', lat: 17.6805, lon: 73.9934 },
+  'sangli': { name: 'Sangli', division: 'Pune Division', lat: 16.8524, lon: 74.5815 },
+  'solapur': { name: 'Solapur', division: 'Pune Division', lat: 17.6599, lon: 75.9064 },
+  'kolhapur': { name: 'Kolhapur', division: 'Pune Division', lat: 16.7050, lon: 74.2433 },
+
+  // Konkan Division
+  'mumbai': { name: 'Mumbai City', division: 'Konkan Division', lat: 18.9388, lon: 72.8354 },
+  'mumbai suburban': { name: 'Mumbai Suburban', division: 'Konkan Division', lat: 19.1171, lon: 72.9044 },
+  'thane': { name: 'Thane', division: 'Konkan Division', lat: 19.2183, lon: 72.9781 },
+  'palghar': { name: 'Palghar', division: 'Konkan Division', lat: 19.6967, lon: 72.7699 },
+  'raigad': { name: 'Raigad (Alibag)', division: 'Konkan Division', lat: 18.6414, lon: 72.8722 },
+  'ratnagiri': { name: 'Ratnagiri', division: 'Konkan Division', lat: 16.9902, lon: 73.3120 },
+  'sindhudurg': { name: 'Sindhudurg', division: 'Konkan Division', lat: 16.1158, lon: 73.6967 },
+
+  // Nashik Division (Khandesh)
+  'nashik': { name: 'Nashik', division: 'Nashik Division', lat: 19.9975, lon: 73.7898 },
+  'ahmednagar': { name: 'Ahilyanagar (Ahmednagar)', division: 'Nashik Division', lat: 19.0948, lon: 74.7480 },
+  'ahilyanagar': { name: 'Ahilyanagar (Ahmednagar)', division: 'Nashik Division', lat: 19.0948, lon: 74.7480 },
+  'dhule': { name: 'Dhule', division: 'Nashik Division', lat: 20.9042, lon: 74.7749 },
+  'jalgaon': { name: 'Jalgaon', division: 'Nashik Division', lat: 21.0077, lon: 75.5626 },
+  'nandurbar': { name: 'Nandurbar', division: 'Nashik Division', lat: 21.3697, lon: 74.2396 },
+
+  // Chhatrapati Sambhajinagar Division (Marathwada)
+  'chhatrapati sambhajinagar': { name: 'Chhatrapati Sambhajinagar', division: 'Marathwada Division', lat: 19.8762, lon: 75.3433 },
+  'aurangabad': { name: 'Chhatrapati Sambhajinagar', division: 'Marathwada Division', lat: 19.8762, lon: 75.3433 },
+  'jalna': { name: 'Jalna', division: 'Marathwada Division', lat: 19.8347, lon: 75.8816 },
+  'beed': { name: 'Beed', division: 'Marathwada Division', lat: 18.9891, lon: 75.7601 },
+  'latur': { name: 'Latur', division: 'Marathwada Division', lat: 18.4088, lon: 76.5604 },
+  'dharashiv': { name: 'Dharashiv (Osmanabad)', division: 'Marathwada Division', lat: 18.1861, lon: 76.0419 },
+  'osmanabad': { name: 'Dharashiv (Osmanabad)', division: 'Marathwada Division', lat: 18.1861, lon: 76.0419 },
+  'nanded': { name: 'Nanded', division: 'Marathwada Division', lat: 19.1383, lon: 77.3210 },
+  'parbhani': { name: 'Parbhani', division: 'Marathwada Division', lat: 19.2686, lon: 76.7708 },
+  'hingoli': { name: 'Hingoli', division: 'Marathwada Division', lat: 19.7196, lon: 77.1472 },
+
+  // Amravati Division (Vidarbha West)
+  'amravati': { name: 'Amravati', division: 'Amravati Division', lat: 20.9374, lon: 77.7796 },
+  'akola': { name: 'Akola', division: 'Amravati Division', lat: 20.7002, lon: 77.0082 },
+  'yavatmal': { name: 'Yavatmal', division: 'Amravati Division', lat: 20.3888, lon: 78.1204 },
+  'buldhana': { name: 'Buldhana', division: 'Amravati Division', lat: 20.5293, lon: 76.1843 },
+  'washim': { name: 'Washim', division: 'Amravati Division', lat: 20.1110, lon: 77.1345 },
+
+  // Nagpur Division (Vidarbha East)
+  'nagpur': { name: 'Nagpur', division: 'Nagpur Division', lat: 21.1458, lon: 79.0882 },
+  'wardha': { name: 'Wardha', division: 'Nagpur Division', lat: 20.7453, lon: 78.6022 },
+  'bhandara': { name: 'Bhandara', division: 'Nagpur Division', lat: 21.1717, lon: 79.6543 },
+  'gondia': { name: 'Gondia', division: 'Nagpur Division', lat: 21.4598, lon: 80.1961 },
+  'chandrapur': { name: 'Chandrapur', division: 'Nagpur Division', lat: 19.9615, lon: 79.2961 },
+  'gadchiroli': { name: 'Gadchiroli', division: 'Nagpur Division', lat: 20.1809, lon: 79.9933 }
+};
+
+/* ==========================================================================
+   3. WMO Weather Code Lookup Dictionary (Emoji-Free & SVG Mapped)
    ========================================================================== */
 const WMO_WEATHER_CODES = {
   0: { label: 'Clear Sky', iconId: 'icon-clear' },
@@ -71,11 +129,12 @@ function getWeatherInfo(code) {
 }
 
 /* ==========================================================================
-   3. DOM Elements Selection
+   4. DOM Elements Selection
    ========================================================================== */
 const searchForm = document.getElementById('search-form');
 const cityInput = document.getElementById('city-input');
 const searchBtn = document.getElementById('search-btn');
+const districtSelect = document.getElementById('district-select');
 const statusBanner = document.getElementById('status-banner');
 const statusIconBox = document.getElementById('status-icon-box');
 const statusMessage = document.getElementById('status-message');
@@ -85,7 +144,7 @@ const forecastGridContainer = document.getElementById('forecast-grid');
 const quickPills = document.querySelectorAll('.city-pill');
 
 /* ==========================================================================
-   4. Secure DOM Manipulation Helpers (Strictly No innerHTML for Content)
+   5. Secure DOM Manipulation Helpers (Strictly No innerHTML for Content)
    ========================================================================== */
 
 /**
@@ -138,7 +197,7 @@ function clearElement(element) {
 }
 
 /* ==========================================================================
-   5. UI State Management
+   6. UI State Management
    ========================================================================== */
 
 /**
@@ -184,6 +243,9 @@ function hideStatus() {
 function setLoadingState(isLoading) {
   cityInput.disabled = isLoading;
   searchBtn.disabled = isLoading;
+  if (districtSelect) {
+    districtSelect.disabled = isLoading;
+  }
 
   if (isLoading) {
     weatherContent.classList.add('is-loading');
@@ -193,16 +255,34 @@ function setLoadingState(isLoading) {
 }
 
 /* ==========================================================================
-   6. Core API Layer (Open-Meteo V1)
+   7. Core API Layer (Open-Meteo V1 + Maharashtra Districts)
    ========================================================================== */
 
 /**
- * Geocodes a city name to latitude, longitude, name, and country.
- * @param {string} name - Raw city name input
- * @returns {Promise<{ name: string, country: string, lat: number, lon: number }>}
+ * Geocodes a city or district name to latitude, longitude, name, and regional metadata.
+ * Prioritizes the calibrated 36 Maharashtra Districts registry for speed and precision.
+ * @param {string} name - Raw city or district query
+ * @returns {Promise<{ name: string, country: string, admin1: string, division: string, lat: number, lon: number, isMaharashtra: boolean }>}
  */
 async function findCity(name) {
   const sanitizedCity = name.trim();
+  const lowerQuery = sanitizedCity.toLowerCase();
+
+  // Instant registry match for Maharashtra districts
+  if (MAHARASHTRA_DISTRICTS.hasOwnProperty(lowerQuery)) {
+    const mh = MAHARASHTRA_DISTRICTS[lowerQuery];
+    return {
+      name: mh.name,
+      country: 'India',
+      admin1: 'Maharashtra',
+      division: mh.division,
+      lat: mh.lat,
+      lon: mh.lon,
+      isMaharashtra: true
+    };
+  }
+
+  // Fallback to Open-Meteo Geocoding API for global locations
   const url = `${CONFIG.GEOCODING_URL}?count=1&name=${encodeURIComponent(sanitizedCity)}`;
 
   const res = await fetch(url);
@@ -212,15 +292,21 @@ async function findCity(name) {
 
   const data = await res.json();
   if (!data.results || !data.results.length) {
-    throw new Error('City not found. Please check the spelling and try again.');
+    throw new Error('City or district not found. Please check the spelling and try again.');
   }
 
   const result = data.results[0];
+  const admin1 = result.admin1 || '';
+  const isMaharashtra = admin1.toLowerCase().includes('maharashtra');
+
   return {
     name: result.name,
     country: result.country || result.country_code || '',
+    admin1: admin1,
+    division: isMaharashtra ? 'Maharashtra State' : '',
     lat: result.latitude,
-    lon: result.longitude
+    lon: result.longitude,
+    isMaharashtra: isMaharashtra
   };
 }
 
@@ -243,7 +329,7 @@ async function getWeather(lat, lon) {
 }
 
 /* ==========================================================================
-   7. Safe DOM Presentation Layer
+   8. Safe DOM Presentation Layer
    ========================================================================== */
 
 /**
@@ -254,7 +340,6 @@ async function getWeather(lat, lon) {
  */
 function formatDateSafe(isoDate, options) {
   try {
-    // Adding T12:00:00 ensures date string is parsed at local noon, avoiding UTC midnight offset day-shifts
     const parsedDate = isoDate.includes('T') ? new Date(isoDate) : new Date(`${isoDate}T12:00:00`);
     return parsedDate.toLocaleDateString(undefined, options);
   } catch (e) {
@@ -264,7 +349,7 @@ function formatDateSafe(isoDate, options) {
 
 /**
  * Safely renders the Current Weather Card into the DOM.
- * @param {{ name: string, country: string }} cityInfo
+ * @param {{ name: string, country: string, admin1?: string, division?: string, isMaharashtra?: boolean }} cityInfo
  * @param {object} weatherData - API response containing current atmospheric data
  */
 function renderCurrentWeather(cityInfo, weatherData) {
@@ -287,8 +372,17 @@ function renderCurrentWeather(cityInfo, weatherData) {
   cityRow.appendChild(locIcon);
   cityRow.appendChild(cityName);
 
-  if (cityInfo.country) {
-    const countryTag = createSafeElement('span', 'cw-country-tag', cityInfo.country);
+  // Dedicated Maharashtra District badge if applicable
+  if (cityInfo.isMaharashtra) {
+    const mhBadge = createSafeElement('span', 'cw-mh-badge');
+    const mhIcon = createSvgIcon('icon-district', 'cw-date-icon');
+    const mhText = createSafeElement('span', '', cityInfo.division || 'Maharashtra');
+    mhBadge.appendChild(mhIcon);
+    mhBadge.appendChild(mhText);
+    cityRow.appendChild(mhBadge);
+  } else if (cityInfo.country) {
+    const regionTag = cityInfo.admin1 ? `${cityInfo.admin1}, ${cityInfo.country}` : cityInfo.country;
+    const countryTag = createSafeElement('span', 'cw-country-tag', regionTag);
     cityRow.appendChild(countryTag);
   }
 
@@ -443,28 +537,28 @@ function renderForecast(weatherData) {
 }
 
 /* ==========================================================================
-   8. Application Orchestrator & State Flow
+   9. Application Orchestrator & State Flow
    ========================================================================== */
 
 /**
- * Main coordinator function to fetch and display weather for a city query.
- * @param {string} cityName - City name to search
+ * Main coordinator function to fetch and display weather for a city or district query.
+ * @param {string} cityName - City or district name to search
  */
 async function fetchAndRenderWeather(cityName) {
   const sanitizedCity = (cityName || '').trim();
 
   // State 1: Empty Input Check
   if (!sanitizedCity) {
-    showStatus('Please enter a city name.', 'warning');
+    showStatus('Please enter a city or district name.', 'warning');
     return;
   }
 
   // State 2: Loading State Initiation
-  showStatus('Fetching live weather...', 'loading');
+  showStatus(`Fetching live weather for ${sanitizedCity}...`, 'loading');
   setLoadingState(true);
 
   try {
-    // Step 1: Geocode city name
+    // Step 1: Geocode or resolve district
     const cityData = await findCity(sanitizedCity);
 
     // Step 2: Fetch 5-day forecast & current data
@@ -474,11 +568,28 @@ async function fetchAndRenderWeather(cityName) {
     renderCurrentWeather(cityData, weatherData);
     renderForecast(weatherData);
 
+    // Update active pill highlight if applicable
+    quickPills.forEach((pill) => {
+      const pCity = pill.getAttribute('data-city');
+      if (pCity && pCity.toLowerCase() === sanitizedCity.toLowerCase()) {
+        pill.classList.add('active-pill');
+      } else {
+        pill.classList.remove('active-pill');
+      }
+    });
+
+    // Synchronize district dropdown value if it matches a district
+    if (districtSelect) {
+      const matchOpt = Array.from(districtSelect.options).find(
+        (opt) => opt.value.toLowerCase() === sanitizedCity.toLowerCase()
+      );
+      districtSelect.value = matchOpt ? matchOpt.value : '';
+    }
+
     // Persist last valid search to localStorage
     try {
       localStorage.setItem(CONFIG.STORAGE_KEY, cityData.name);
     } catch (storageError) {
-      // Graceful fallback if localStorage is unavailable/disabled in privacy modes
       console.warn('LocalStorage unavailable:', storageError);
     }
 
@@ -502,7 +613,7 @@ async function fetchAndRenderWeather(cityName) {
 }
 
 /* ==========================================================================
-   9. Event Listeners & Initialization
+   10. Event Listeners & Initialization
    ========================================================================== */
 
 // Search Form Submission (Strictly on submit event - No keystroke requests)
@@ -511,7 +622,18 @@ searchForm.addEventListener('submit', (e) => {
   fetchAndRenderWeather(cityInput.value);
 });
 
-// Quick City Pills Click Handlers
+// Maharashtra District Dropdown Change Handler
+if (districtSelect) {
+  districtSelect.addEventListener('change', (e) => {
+    const selectedDistrict = e.target.value;
+    if (selectedDistrict) {
+      cityInput.value = selectedDistrict;
+      fetchAndRenderWeather(selectedDistrict);
+    }
+  });
+}
+
+// Quick City / District Pills Click Handlers
 quickPills.forEach((pill) => {
   pill.addEventListener('click', () => {
     const city = pill.getAttribute('data-city');

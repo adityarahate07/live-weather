@@ -1,4 +1,4 @@
-# Live Weather Dashboard (InternCircle Project 04)
+# Live Weather Dashboard 
 
 A responsive, high-performance, modern atmospheric dashboard built with **HTML5**, **CSS3**, and **Vanilla JavaScript (ES6+)**. This application leverages the keyless, open-source **Open-Meteo APIs (v1)** to provide real-time meteorological conditions and an extended 5-day weather forecast.
 
